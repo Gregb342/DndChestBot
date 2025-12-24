@@ -18,7 +18,7 @@ public sealed class ChestService
 
         return new ChestOperationResult(
             Success: true,
-            Message: $"📦 Le coffre contient actuellement **{state.GoldPieces} PO**.\n🎒 Objets : **{state.Items.Count}**",
+            Message: $"📦 Le coffre contient actuellement **{state.GoldPieces} PO**.\n🧰 Objets : **{state.Items.Count}**",
             GoldPieces: state.GoldPieces,
             ItemCount: state.Items.Count);
     }
@@ -140,7 +140,7 @@ public sealed class ChestService
 
         var notesPart = item.Notes is null ? "" : $" *({item.Notes})*";
         var msg =
-            $"🎒 **{characterName}** ajoute **{item.Quantity}× {item.Name}**{notesPart} au coffre.\n" +
+            $"🧰 **{characterName}** ajoute **{item.Quantity}× {item.Name}**{notesPart} au coffre.\n" +
             $"Coffre : **{state.GoldPieces} PO** + **{state.Items.Count} objets**";
 
         return new ChestOperationResult(true, msg, state.GoldPieces, state.Items.Count);
@@ -207,7 +207,7 @@ public sealed class ChestService
         var state = _repo.LoadOrCreate(guildId);
 
         if (state.Items.Count == 0)
-            return "🎒 Le coffre ne contient aucun objet.";
+            return "🧰 Le coffre ne contient aucun objet.";
 
         var items = state.Items
             .OrderBy(i => i.Name)
@@ -222,7 +222,7 @@ public sealed class ChestService
             return $"{skip + idx + 1}. **#{i.Ref}** — **{i.Quantity}× {i.Name}**{note}{addedBy}";
         });
 
-        return "🎒 **Objets du coffre :**\n" + string.Join("\n", lines);
+        return "🧰 **Objets du coffre :**\n" + string.Join("\n", lines);
     }
 
     private static ChestOperationResult Fail(ChestState state, string message)
