@@ -69,6 +69,9 @@ artifacts/
 *.userosscache
 *.sln.docstates
 
+# User-specific configuration files
+appsettings.Development.json
+
 # Rider
 .idea/
 *.sln.iml
