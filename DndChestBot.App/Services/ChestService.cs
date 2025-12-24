@@ -217,7 +217,8 @@ public sealed class ChestService
         var lines = items.Select((i, idx) =>
         {
             var note = i.Notes is null ? "" : $" — {i.Notes}";
-            return $"{skip + idx + 1}. **#{i.Ref}** — **{i.Quantity}× {i.Name}**{note}";
+            var addedBy = $" — Ajouté par <@{i.AddedByUserId}>";
+            return $"{skip + idx + 1}. **#{i.Ref}** — **{i.Quantity}× {i.Name}**{note}{addedBy}";
         });
 
         return "🎒 **Objets du coffre :**\n" + string.Join("\n", lines);
