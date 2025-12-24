@@ -118,6 +118,7 @@ public sealed class ChestService
             Quantity = quantity,
             Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
             AddedByUserId = userId,
+            AddedByCharacterName = characterName.Trim(),
             AddedAtUtc = DateTime.UtcNow
         };
 
@@ -217,7 +218,7 @@ public sealed class ChestService
         var lines = items.Select((i, idx) =>
         {
             var note = i.Notes is null ? "" : $" — {i.Notes}";
-            var addedBy = $" — Ajouté par <@{i.AddedByUserId}>";
+            var addedBy = $" — Ajouté par **{i.AddedByCharacterName}**";
             return $"{skip + idx + 1}. **#{i.Ref}** — **{i.Quantity}× {i.Name}**{note}{addedBy}";
         });
 

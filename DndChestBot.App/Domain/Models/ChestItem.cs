@@ -14,6 +14,8 @@ public sealed class ChestItem
 
     public ulong AddedByUserId { get; set; }
 
+    public string AddedByCharacterName { get; set; } = string.Empty;
+
     /// <summary>
     /// Référence courte affichable (ex: A3F2) dérivée du Guid.
     /// </summary>
