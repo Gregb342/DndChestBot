@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
 using System.Reflection;
 
 namespace DndChestBot.App.Discord;
@@ -10,12 +11,20 @@ public sealed class InteractionHandler
     private readonly DiscordSocketClient _client;
     private readonly InteractionService _interactions;
     private readonly IServiceProvider _services;
+    private readonly ulong? _devGuildId;
 
-    public InteractionHandler(DiscordSocketClient client, InteractionService interactions, IServiceProvider services)
+    public InteractionHandler(
+        DiscordSocketClient client, 
+        InteractionService interactions, 
+        IServiceProvider services,
+        IConfiguration config)
     {
         _client = client;
         _interactions = interactions;
         _services = services;
+
+        if (ulong.TryParse(config["Discord:DevGuildId"], out var gid))
+            _devGuildId = gid;
     }
 
     public async Task InitializeAsync()
@@ -26,8 +35,10 @@ public sealed class InteractionHandler
 
         _client.Ready += async () =>
         {
-            // Pour dev : enregistre les commandes globalement (peut prendre du temps à se propager)
-            await _interactions.RegisterCommandsGloballyAsync();
+            if (_devGuildId.HasValue)
+                await _interactions.RegisterCommandsToGuildAsync(_devGuildId.Value);
+            else
+                await _interactions.RegisterCommandsGloballyAsync();
         };
     }
 
