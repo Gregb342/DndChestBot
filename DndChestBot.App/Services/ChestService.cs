@@ -14,8 +14,10 @@ public sealed class ChestService
 
     public ChestOperationResult GetBalance(ulong guildId)
     {
+        Console.WriteLine($"[ChestService] GetBalance - GuildId: {guildId}");
         var state = _repo.LoadOrCreate(guildId);
 
+        Console.WriteLine($"[ChestService] Balance consulté - GuildId: {guildId}, Gold: {state.GoldPieces} PO, Items: {state.Items.Count}");
         return new ChestOperationResult(
             Success: true,
             Message: $"📦 Le coffre contient actuellement **{state.GoldPieces} PO**.\n🧰 Objets : **{state.Items.Count}**",
@@ -25,13 +27,20 @@ public sealed class ChestService
 
     public ChestOperationResult DepositGold(ulong guildId, int amount, string characterName, ulong userId, ulong channelId)
     {
+        Console.WriteLine($"[ChestService] DepositGold - GuildId: {guildId}, Amount: {amount}, Character: {characterName}, UserId: {userId}");
         var state = _repo.LoadOrCreate(guildId);
 
         if (string.IsNullOrWhiteSpace(characterName))
+        {
+            Console.WriteLine($"[ChestService] DepositGold FAILED - Missing character name");
             return Fail(state, "❌ Le paramètre `pj` est obligatoire.");
+        }
 
         if (amount <= 0)
+        {
+            Console.WriteLine($"[ChestService] DepositGold FAILED - Invalid amount: {amount}");
             return Fail(state, "❌ Le montant doit être > 0.");
+        }
 
         checked { state.GoldPieces += amount; }
 
@@ -47,6 +56,8 @@ public sealed class ChestService
 
         _repo.Save(state);
 
+        Console.WriteLine($"[ChestService] DepositGold SUCCESS - New balance: {state.GoldPieces} PO");
+
         var msg = $"💰 **{characterName}** dépose **{amount} PO** dans le coffre.\n" +
                   $"Total du coffre : **{state.GoldPieces} PO**";
 
@@ -55,16 +66,24 @@ public sealed class ChestService
 
     public ChestOperationResult WithdrawGold(ulong guildId, int amount, string characterName, ulong userId, ulong channelId)
     {
+        Console.WriteLine($"[ChestService] WithdrawGold - GuildId: {guildId}, Amount: {amount}, Character: {characterName}, UserId: {userId}");
         var state = _repo.LoadOrCreate(guildId);
 
         if (string.IsNullOrWhiteSpace(characterName))
+        {
+            Console.WriteLine($"[ChestService] WithdrawGold FAILED - Missing character name");
             return Fail(state, "❌ Le paramètre `pj` est obligatoire.");
+        }
 
         if (amount <= 0)
+        {
+            Console.WriteLine($"[ChestService] WithdrawGold FAILED - Invalid amount: {amount}");
             return Fail(state, "❌ Le montant doit être > 0.");
+        }
 
         if (amount > state.GoldPieces)
         {
+            Console.WriteLine($"[ChestService] WithdrawGold FAILED - Insufficient funds: requested {amount} PO, available {state.GoldPieces} PO");
             var msgRefuse =
                 $"❌ Retrait refusé : demande **{amount} PO**, coffre = **{state.GoldPieces} PO**.\n" +
                 $"Total du coffre : **{state.GoldPieces} PO**";
@@ -86,6 +105,8 @@ public sealed class ChestService
 
         _repo.Save(state);
 
+        Console.WriteLine($"[ChestService] WithdrawGold SUCCESS - New balance: {state.GoldPieces} PO");
+
         var msg = $"🪙 **{characterName}** retire **{amount} PO** du coffre.\n" +
                   $"Total du coffre : **{state.GoldPieces} PO**";
 
@@ -101,16 +122,26 @@ public sealed class ChestService
         ulong userId,
         ulong channelId)
     {
+        Console.WriteLine($"[ChestService] AddItem - GuildId: {guildId}, Item: {name}, Quantity: {quantity}, Character: {characterName}, UserId: {userId}");
         var state = _repo.LoadOrCreate(guildId);
 
         if (string.IsNullOrWhiteSpace(characterName))
+        {
+            Console.WriteLine($"[ChestService] AddItem FAILED - Missing character name");
             return Fail(state, "❌ Le paramètre `pj` est obligatoire.");
+        }
 
         if (string.IsNullOrWhiteSpace(name))
+        {
+            Console.WriteLine($"[ChestService] AddItem FAILED - Missing item name");
             return Fail(state, "❌ Nom d'objet obligatoire (ex: \"Rubis\").");
+        }
 
         if (quantity <= 0)
+        {
+            Console.WriteLine($"[ChestService] AddItem FAILED - Invalid quantity: {quantity}");
             return Fail(state, "❌ La quantité doit être > 0.");
+        }
 
         var item = new ChestItem
         {
@@ -138,6 +169,8 @@ public sealed class ChestService
 
         _repo.Save(state);
 
+        Console.WriteLine($"[ChestService] AddItem SUCCESS - Item added: {item.Name} (#{item.Ref}), Total items: {state.Items.Count}");
+
         var notesPart = item.Notes is null ? "" : $" *({item.Notes})*";
         var msg =
             $"🧰 **{characterName}** ajoute **{item.Quantity}× {item.Name}**{notesPart} au coffre.\n" +
@@ -154,25 +187,41 @@ public sealed class ChestService
         ulong userId,
         ulong channelId)
     {
+        Console.WriteLine($"[ChestService] RemoveItemByRef - GuildId: {guildId}, Ref: {itemRef}, Quantity: {quantity}, Character: {characterName}, UserId: {userId}");
         var state = _repo.LoadOrCreate(guildId);
 
         if (string.IsNullOrWhiteSpace(characterName))
+        {
+            Console.WriteLine($"[ChestService] RemoveItemByRef FAILED - Missing character name");
             return Fail(state, "❌ Le paramètre `pj` est obligatoire.");
+        }
 
         if (string.IsNullOrWhiteSpace(itemRef))
+        {
+            Console.WriteLine($"[ChestService] RemoveItemByRef FAILED - Missing item reference");
             return Fail(state, "❌ Référence objet obligatoire. Utilise `/coffre item list`.");
+        }
 
         if (quantity <= 0)
+        {
+            Console.WriteLine($"[ChestService] RemoveItemByRef FAILED - Invalid quantity: {quantity}");
             return Fail(state, "❌ La quantité doit être > 0.");
+        }
 
         var normalized = itemRef.Trim().ToUpperInvariant();
         var item = state.Items.FirstOrDefault(i => i.Ref.Equals(normalized, StringComparison.OrdinalIgnoreCase));
 
         if (item is null)
+        {
+            Console.WriteLine($"[ChestService] RemoveItemByRef FAILED - Item not found: {normalized}");
             return Fail(state, $"❌ Objet introuvable : ref **{normalized}**. Utilise `/coffre item list`.");
+        }
 
         if (quantity > item.Quantity)
+        {
+            Console.WriteLine($"[ChestService] RemoveItemByRef FAILED - Insufficient quantity: requested {quantity}, available {item.Quantity}");
             return Fail(state, $"❌ Quantité insuffisante : demande **{quantity}**, disponible **{item.Quantity}** pour **{item.Name}** (#{item.Ref}).");
+        }
 
         item.Quantity -= quantity;
 
@@ -194,6 +243,8 @@ public sealed class ChestService
 
         _repo.Save(state);
 
+        Console.WriteLine($"[ChestService] RemoveItemByRef SUCCESS - Item removed: {item.Name} (#{normalized}), Fully removed: {removedFully}, Total items: {state.Items.Count}");
+
         var suffix = removedFully ? " (objet retiré du coffre)" : $" (reste {item.Quantity})";
         var msg =
             $"🧳 **{characterName}** retire **{quantity}× {item.Name}** (#{item.Ref}) du coffre{suffix}.\n" +
@@ -204,16 +255,22 @@ public sealed class ChestService
 
     public string ListItems(ulong guildId, int take = 10, int skip = 0)
     {
+        Console.WriteLine($"[ChestService] ListItems - GuildId: {guildId}, Take: {take}, Skip: {skip}");
         var state = _repo.LoadOrCreate(guildId);
 
         if (state.Items.Count == 0)
+        {
+            Console.WriteLine($"[ChestService] ListItems - No items in chest");
             return "🧰 Le coffre ne contient aucun objet.";
+        }
 
         var items = state.Items
             .OrderBy(i => i.Name)
             .Skip(skip)
             .Take(take)
             .ToList();
+
+        Console.WriteLine($"[ChestService] ListItems - Displaying {items.Count} items out of {state.Items.Count} total");
 
         var lines = items.Select((i, idx) =>
         {
